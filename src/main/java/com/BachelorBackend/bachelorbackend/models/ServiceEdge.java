@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class ServiceEdge {
-    private String sourceService;
-    private String targetService;
+    private Service sourceService;
+    private Service targetService;
     // Occurrences / size of edge / amount of calls?
 }

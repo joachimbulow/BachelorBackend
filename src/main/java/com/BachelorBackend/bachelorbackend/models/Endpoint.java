@@ -9,8 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class Endpoint {
-    //These motherfuckers need a count0
-    private String url;
+    private String path;
     private String serviceName;
 
 }

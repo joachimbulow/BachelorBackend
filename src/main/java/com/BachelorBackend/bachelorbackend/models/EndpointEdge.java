@@ -10,4 +10,9 @@ import lombok.Setter;
 public class EndpointEdge {
     private Endpoint sourceEndpoint;
     private Endpoint targetEndpoint;
+    private int count;
+
+    public void incrementCount() {
+        this.count++;
+    }
 }

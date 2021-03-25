@@ -1,5 +1,6 @@
 package com.BachelorBackend.bachelorbackend.controllers;
 
+import com.BachelorBackend.bachelorbackend.models.EndpointEdge;
 import com.BachelorBackend.bachelorbackend.models.Service;
 import com.BachelorBackend.bachelorbackend.models.nodes.NodeTree;
 import com.BachelorBackend.bachelorbackend.models.responses.Trace;
@@ -39,6 +40,7 @@ public class ServicesController {
         //Do the work
         ArrayList<Trace> traces = servicesService.getAllTraces();
         ArrayList<NodeTree> nodeTrees = servicesService.convertTracesToNodeTrees(traces);
+        ArrayList<EndpointEdge> edges = servicesService.convertNodeTreesToEndpointEdges(nodeTrees);
         return "Check the debug!";
     }
 }
