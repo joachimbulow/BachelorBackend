@@ -10,5 +10,9 @@ import lombok.Setter;
 public class ServiceEdge {
     private Service sourceService;
     private Service targetService;
-    // Occurrences / size of edge / amount of calls?
+    private int count;
+
+    public void incrementCount(){
+        this.count++;
+    }
 }

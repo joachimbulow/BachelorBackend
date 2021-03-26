@@ -2,6 +2,7 @@ package com.BachelorBackend.bachelorbackend.controllers;
 
 import com.BachelorBackend.bachelorbackend.models.EndpointEdge;
 import com.BachelorBackend.bachelorbackend.models.Service;
+import com.BachelorBackend.bachelorbackend.models.ServiceEdge;
 import com.BachelorBackend.bachelorbackend.models.nodes.NodeTree;
 import com.BachelorBackend.bachelorbackend.models.responses.Trace;
 import com.BachelorBackend.bachelorbackend.services.ServicesService;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 @RestController
@@ -28,10 +30,9 @@ public class ServicesController {
     }
 
 
-    @GetMapping("/services/edges")
+    @GetMapping("/traces")
     public ArrayList<Trace> getServicesEdges() {
         //Do the work
-        //This currently returns traces
         return servicesService.getAllTraces();
     }
 
@@ -40,7 +41,8 @@ public class ServicesController {
         //Do the work
         ArrayList<Trace> traces = servicesService.getAllTraces();
         ArrayList<NodeTree> nodeTrees = servicesService.convertTracesToNodeTrees(traces);
-        ArrayList<EndpointEdge> edges = servicesService.convertNodeTreesToEndpointEdges(nodeTrees);
+        ArrayList<EndpointEdge> endpointEdges = servicesService.convertNodeTreesToEndpointEdges(nodeTrees);
+        ArrayList<ServiceEdge> serviceEdges = servicesService.convertNodeTreesToServiceEdges(nodeTrees);
         return "Check the debug!";
     }
 }

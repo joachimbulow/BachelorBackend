@@ -3,6 +3,7 @@ package com.BachelorBackend.bachelorbackend.services;
 import com.BachelorBackend.bachelorbackend.models.Endpoint;
 import com.BachelorBackend.bachelorbackend.models.EndpointEdge;
 import com.BachelorBackend.bachelorbackend.models.Service;
+import com.BachelorBackend.bachelorbackend.models.ServiceEdge;
 import com.BachelorBackend.bachelorbackend.models.nodes.Node;
 import com.BachelorBackend.bachelorbackend.models.nodes.NodeTree;
 import com.BachelorBackend.bachelorbackend.models.responses.Span;
@@ -28,7 +29,7 @@ public class ServicesService {
     public ArrayList<Trace> getAllTraces() {
         try {
             ArrayList<Trace> traces = new ArrayList<Trace>();
-            ResponseEntity<Span[][]> response = restTemplate.getForEntity("http://joachimbulow.com:9411/zipkin/api/v2/traces?serviceName=zipkin-server1&endTs=1616592768048&limit=10", Span[][].class);
+            ResponseEntity<Span[][]> response = restTemplate.getForEntity("http://joachimbulow.com:9411/zipkin/api/v2/traces?serviceName=zipkin-server1&endTs=1616694950502&lookback=604800000&limit=10", Span[][].class);
             //We have to do this manually, as RestTemplate cannot parse directly into Trace type
             for (Span[] trace : response.getBody()) {
                 traces.add(new Trace(Arrays.asList(trace)));
@@ -91,7 +92,14 @@ public class ServicesService {
         return new ArrayList<EndpointEdge>(edgeMap.values());
     }
 
-    public void convertNodeTreesToServiceEdges(ArrayList<NodeTree> nodeTrees) {
+    public ArrayList<ServiceEdge> convertNodeTreesToServiceEdges(ArrayList<NodeTree> nodeTrees) {
+        HashMap<String, ServiceEdge> edgeMap = new HashMap<>();
+
+        nodeTrees.forEach(nodeTree -> {
+            fillServiceEdgeHashMapFromNode(nodeTree.getRootNode(), edgeMap);
+        });
+
+        return new ArrayList<ServiceEdge>(edgeMap.values());
 
     }
 
@@ -105,14 +113,28 @@ public class ServicesService {
             else {
                 edgeMap.get(edgeKeyString).incrementCount();
             }
-            node.getChildren().forEach(child -> {
-                fillEndpointEdgeHashMapFromNode(child, edgeMap);
-            });
+
+            fillEndpointEdgeHashMapFromNode(childNode, edgeMap);
+
+        });
+    }
+
+    private void fillServiceEdgeHashMapFromNode(Node node, HashMap<String, ServiceEdge> edgeMap){
+        node.getChildren().forEach(childNode -> {
+            String edgeKeyString = node.getServiceName() + "/" + childNode.getServiceName();
+            if (!edgeMap.containsKey(edgeKeyString)){
+                edgeMap.put(edgeKeyString, new ServiceEdge(nodeToService(node), nodeToService(childNode), 1));
+            }
+            else {
+                edgeMap.get(edgeKeyString).incrementCount();
+            }
+
+            fillServiceEdgeHashMapFromNode(childNode, edgeMap);
         });
     }
 
     private Endpoint nodeToEndpoint(Node node){
-        return new Endpoint(node.getServiceName(), node.getServiceName());
+        return new Endpoint(node.getEndpointName(), node.getServiceName());
     }
 
     private Service nodeToService(Node node){
