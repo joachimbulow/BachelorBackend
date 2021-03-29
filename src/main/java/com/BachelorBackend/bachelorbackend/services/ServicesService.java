@@ -29,7 +29,7 @@ public class ServicesService {
     public ArrayList<Trace> getAllTraces() {
         try {
             ArrayList<Trace> traces = new ArrayList<Trace>();
-            ResponseEntity<Span[][]> response = restTemplate.getForEntity("http://joachimbulow.com:9411/zipkin/api/v2/traces?serviceName=zipkin-server1&endTs=1616694950502&lookback=604800000&limit=10", Span[][].class);
+            ResponseEntity<Span[][]> response = restTemplate.getForEntity("http://joachimbulow.com:9411/zipkin/api/v2/traces?endTs=1617002982974&lookback=604800000&limit=10", Span[][].class);
             //We have to do this manually, as RestTemplate cannot parse directly into Trace type
             for (Span[] trace : response.getBody()) {
                 traces.add(new Trace(Arrays.asList(trace)));
