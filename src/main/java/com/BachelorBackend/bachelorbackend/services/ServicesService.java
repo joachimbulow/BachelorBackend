@@ -1,5 +1,6 @@
 package com.BachelorBackend.bachelorbackend.services;
 
+import com.BachelorBackend.bachelorbackend.Helpers.DateHelper;
 import com.BachelorBackend.bachelorbackend.models.Endpoint;
 import com.BachelorBackend.bachelorbackend.models.EndpointEdge;
 import com.BachelorBackend.bachelorbackend.models.Service;
@@ -15,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -26,10 +28,18 @@ public class ServicesService {
     @Autowired
     private RestTemplate restTemplate;
 
-    public ArrayList<Trace> getAllTraces() {
+    public ArrayList<Trace> getAllTraces(String earliestTime, String latestTime, String filterService) {
         try {
             ArrayList<Trace> traces = new ArrayList<Trace>();
-            ResponseEntity<Span[][]> response = restTemplate.getForEntity("http://joachimbulow.com:9411/zipkin/api/v2/traces?endTs=1617002982974&lookback=604800000&limit=10", Span[][].class);
+
+            //Creating the URL
+            long earliestTimeInEpoch = DateHelper.convertDateToEpochMillis(earliestTime);
+            long latestTimeInEpoch = DateHelper.convertDateToEpochMillis(latestTime);
+            long lookBack = latestTimeInEpoch - earliestTimeInEpoch;
+            String url = String.format("http://joachimbulow.com:9411/zipkin/api/v2/traces?lookback=%s&endTs=%s" , lookBack, latestTimeInEpoch);
+            if (filterService != "") url += "&serviceName=" + filterService;
+
+            ResponseEntity<Span[][]> response = restTemplate.getForEntity(url, Span[][].class);
             //We have to do this manually, as RestTemplate cannot parse directly into Trace type
             for (Span[] trace : response.getBody()) {
                 traces.add(new Trace(Arrays.asList(trace)));
@@ -38,7 +48,7 @@ public class ServicesService {
         } catch (Exception e) {
             System.out.println("Exception caught.");
             System.out.println(e.toString());
-            return null;
+            return new ArrayList<Trace>();
         }
     }
 

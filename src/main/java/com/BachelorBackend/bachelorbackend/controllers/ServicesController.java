@@ -10,6 +10,7 @@ import com.BachelorBackend.bachelorbackend.services.ServicesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.lang.reflect.Array;
@@ -33,16 +34,16 @@ public class ServicesController {
     }
 
 
-    @GetMapping("/traces")
-    public ArrayList<Trace> getServicesEdges() {
-        //Do the work
-        return servicesService.getAllTraces();
-    }
+//    @GetMapping("/traces")
+//    public ArrayList<Trace> getServicesEdges() {
+//        //Do the work
+//        return servicesService.getAllTraces();
+//    }
 
     //Insert url params to filter
     @GetMapping("/getEdgeData")
-    public EdgesDTO getEdgeData() {
-        ArrayList<Trace> traces = servicesService.getAllTraces();
+    public EdgesDTO getEdgeData(@RequestParam String earliestDate, @RequestParam String latestDate, @RequestParam String filterService) {
+        ArrayList<Trace> traces = servicesService.getAllTraces(earliestDate, latestDate, filterService);
         ArrayList<NodeTree> nodeTrees = servicesService.convertTracesToNodeTrees(traces);
         ArrayList<EndpointEdge> endpointEdges = servicesService.convertNodeTreesToEndpointEdges(nodeTrees);
         ArrayList<ServiceEdge> serviceEdges = servicesService.convertNodeTreesToServiceEdges(nodeTrees);
