@@ -68,8 +68,11 @@ public class ServicesService {
         ArrayList<NodeTree> nodeTrees = new ArrayList<>();
         traces.stream().forEach(trace -> {
             NodeTree nodeTree = new NodeTree();
-            //Since root is always last in the array, fetch this initially, and apply as root
-            nodeTree.setRootNode(convertServerSpanToNode(trace.getSpans().get(trace.getSpans().size() - 1)));
+            //Find the root span, that doesn't have a parent
+            Span rootSpan = trace.getSpans().stream().filter(span -> span.getParentId() == null).findFirst().orElse(null);
+            if (rootSpan == null) return;
+            
+            nodeTree.setRootNode(convertServerSpanToNode(rootSpan));
             //Fill the tree
             fillChildren(nodeTree.getRootNode(), trace);
             nodeTrees.add(nodeTree);

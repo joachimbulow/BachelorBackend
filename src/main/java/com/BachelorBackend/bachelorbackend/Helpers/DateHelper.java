@@ -5,7 +5,6 @@ import java.util.Date;
 
 public class DateHelper {
     public static long convertDateToEpochMillis(String date){
-        System.out.println(date);
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
         try{
             Date dateInstance = formatter.parse(date);
