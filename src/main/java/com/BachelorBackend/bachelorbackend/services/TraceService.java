@@ -39,6 +39,7 @@ public class TraceService {
             ResponseEntity<Span[][]> response = restTemplate.getForEntity(url, Span[][].class);
             //We have to do this manually, as RestTemplate cannot parse directly into Trace type
             for (Span[] trace : response.getBody()) {
+                //Escaping CRON jobs who do not have any path and are therefore not relevant
                 if(trace[0].getTags().getPath() != null){
                     traces.add(new Trace(Arrays.asList(trace)));
                 }
