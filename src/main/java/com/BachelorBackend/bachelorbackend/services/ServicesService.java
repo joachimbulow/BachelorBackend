@@ -36,13 +36,16 @@ public class ServicesService {
             long earliestTimeInEpoch = DateHelper.convertDateToEpochMillis(earliestTime);
             long latestTimeInEpoch = DateHelper.convertDateToEpochMillis(latestTime);
             long lookBack = latestTimeInEpoch - earliestTimeInEpoch;
-            String url = String.format("http://joachimbulow.com:9411/zipkin/api/v2/traces?lookback=%s&endTs=%s" , lookBack, latestTimeInEpoch);
+            String url = String.format("http://joachimbulow.com:9411/zipkin/api/v2/traces?lookback=%s&endTs=%s&limit=1000" , lookBack, latestTimeInEpoch);
             if (filterService != "") url += "&serviceName=" + filterService;
 
             ResponseEntity<Span[][]> response = restTemplate.getForEntity(url, Span[][].class);
             //We have to do this manually, as RestTemplate cannot parse directly into Trace type
             for (Span[] trace : response.getBody()) {
-                traces.add(new Trace(Arrays.asList(trace)));
+                if(trace[0].getTags().getPath() != null){
+                    traces.add(new Trace(Arrays.asList(trace)));
+                }
+
             }
             return traces;
         } catch (Exception e) {
@@ -81,12 +84,12 @@ public class ServicesService {
     }
 
     private Node convertServerSpanToNode(Span serverSpan) {
-        return new Node(serverSpan.getLocalEndpoint().getServiceName(), serverSpan.getTags().getPath(), serverSpan.getId(), new ArrayList<Node>());
+        return new Node(serverSpan.getLocalEndpoint().getServiceName(), serverSpan.getName(), serverSpan.getId(), new ArrayList<Node>());
     }
 
     public void fillChildren(Node node, Trace trace) {
         //Since we can derive everything from the SERVER spans, and we have access to ID's we only need these to fill the tree
-        trace.getSpans().stream().filter(span -> (span.getParentId() != null && span.getParentId().equals(node.getId())) && span.getKind().equals("SERVER")).forEach(span -> {
+        trace.getSpans().stream().filter(span -> (span.getParentId() != null && span.getParentId().equals(node.getId())) && (span.getKind() != null && span.getKind().equals("SERVER"))).forEach(span -> {
                     node.getChildren().add(convertServerSpanToNode(span));
                 }
         );
@@ -99,7 +102,22 @@ public class ServicesService {
         HashMap<String, EndpointEdge> edgeMap = new HashMap<>();
 
         nodeTrees.forEach(nodetree -> {
-            fillEndpointEdgeHashMapFromNode(nodetree.getRootNode(), edgeMap);
+            Node rootNode = nodetree.getRootNode();
+            // If the root node has no children, add it as an edge with an empty target for FE to get Node from
+            if (rootNode.getChildren().size() == 0){
+                String rootNodeKeyString = rootNode.getServiceName() + "/" + rootNode.getEndpointName();
+                if (!edgeMap.containsKey(rootNodeKeyString)){
+                    edgeMap.put(rootNodeKeyString, new EndpointEdge(nodeToEndpoint(rootNode), null, 1));
+                }
+                else {
+                    edgeMap.get(rootNodeKeyString).incrementCount();
+                }
+            }
+            else {
+                // Else fill edges
+                fillEndpointEdgeHashMapFromNode(rootNode, edgeMap);
+            }
+
         });
 
         return new ArrayList<EndpointEdge>(edgeMap.values());
@@ -108,8 +126,22 @@ public class ServicesService {
     public ArrayList<ServiceEdge> convertNodeTreesToServiceEdges(ArrayList<NodeTree> nodeTrees) {
         HashMap<String, ServiceEdge> edgeMap = new HashMap<>();
 
-        nodeTrees.forEach(nodeTree -> {
-            fillServiceEdgeHashMapFromNode(nodeTree.getRootNode(), edgeMap);
+        nodeTrees.forEach(nodetree -> {
+            Node rootNode = nodetree.getRootNode();
+            // If the root node has no children, add it as an edge with an empty target for FE to get Node from
+            if (rootNode.getChildren().size() == 0){
+                String rootNodeKeyString = rootNode.getServiceName();
+                if (!edgeMap.containsKey(rootNodeKeyString)){
+                    edgeMap.put(rootNodeKeyString, new ServiceEdge(nodeToService(rootNode), null, 1));
+                }
+                else {
+                    edgeMap.get(rootNodeKeyString).incrementCount();
+                }
+            }
+            else {
+                // Else fill edges
+                fillServiceEdgeHashMapFromNode(rootNode, edgeMap);
+            }
         });
 
         return new ArrayList<ServiceEdge>(edgeMap.values());
