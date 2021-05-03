@@ -1,19 +1,22 @@
 package com.BachelorBackend.bachelorbackend.controllers;
 
+import com.BachelorBackend.bachelorbackend.Helpers.NodeConverter;
+import com.BachelorBackend.bachelorbackend.Helpers.NodeTreeConverter;
 import com.BachelorBackend.bachelorbackend.models.DTOs.EdgesDTO;
 import com.BachelorBackend.bachelorbackend.models.EndpointEdge;
 import com.BachelorBackend.bachelorbackend.models.Service;
 import com.BachelorBackend.bachelorbackend.models.ServiceEdge;
 import com.BachelorBackend.bachelorbackend.models.nodes.NodeTree;
 import com.BachelorBackend.bachelorbackend.models.responses.Trace;
+import com.BachelorBackend.bachelorbackend.services.EdgeService;
 import com.BachelorBackend.bachelorbackend.services.ServicesService;
+import com.BachelorBackend.bachelorbackend.services.TraceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 @RestController
@@ -23,6 +26,12 @@ public class ServicesController {
 
     @Autowired
     private ServicesService servicesService;
+
+    @Autowired
+    private TraceService traceService;
+
+    @Autowired
+    private EdgeService edgeService;
 
     private final String ZIPKIN_API_URL = "http://joachimbulow.com:9411/zipkin/api/v2/";
 
@@ -43,11 +52,7 @@ public class ServicesController {
     //Insert url params to filter
     @GetMapping("/getEdgeData")
     public EdgesDTO getEdgeData(@RequestParam String earliestDate, @RequestParam String latestDate, @RequestParam String filterService) {
-        ArrayList<Trace> traces = servicesService.getAllTraces(earliestDate, latestDate, filterService);
-        ArrayList<NodeTree> nodeTrees = servicesService.convertTracesToNodeTrees(traces);
-        ArrayList<EndpointEdge> endpointEdges = servicesService.convertNodeTreesToEndpointEdges(nodeTrees);
-        ArrayList<ServiceEdge> serviceEdges = servicesService.convertNodeTreesToServiceEdges(nodeTrees);
-        return new EdgesDTO(endpointEdges, serviceEdges);
+        return edgeService.getEdgeData(earliestDate, latestDate, filterService);
     }
 
     @GetMapping("/testing")
