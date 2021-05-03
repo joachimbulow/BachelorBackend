@@ -21,7 +21,7 @@ import java.util.ArrayList;
 
 @RestController
 @CrossOrigin
-public class ServicesController {
+public class EdgeController {
 
 
     @Autowired
@@ -33,21 +33,12 @@ public class ServicesController {
     @Autowired
     private EdgeService edgeService;
 
-    private final String ZIPKIN_API_URL = "http://joachimbulow.com:9411/zipkin/api/v2/";
-
-
     //Returns an array of services in form of objects: {"name":"connect-user-api"}
     @GetMapping("/services")
     public Service[] getServices() {
         return servicesService.getServices();
     }
 
-
-//    @GetMapping("/traces")
-//    public ArrayList<Trace> getServicesEdges() {
-//        //Do the work
-//        return servicesService.getAllTraces();
-//    }
 
     //Insert url params to filter
     @GetMapping("/getEdgeData")
