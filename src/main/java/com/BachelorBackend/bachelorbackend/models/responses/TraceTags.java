@@ -21,5 +21,7 @@ public class TraceTags {
     private String controllerClass;
     @JsonProperty(value="mvc.controller.method")
     private String controllerMethod;
+    @JsonProperty(value="error")
+    private String error;
 
 }

@@ -28,9 +28,6 @@ public class EdgeController {
     private ServicesService servicesService;
 
     @Autowired
-    private TraceService traceService;
-
-    @Autowired
     private EdgeService edgeService;
 
     //Returns an array of services in form of objects: {"name":"connect-user-api"}

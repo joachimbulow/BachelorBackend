@@ -12,12 +12,12 @@ public class NodeTreeConverter {
         ArrayList<NodeTree> nodeTrees = new ArrayList<>();
         traces.stream().forEach(trace -> {
             NodeTree nodeTree = new NodeTree();
-            //Find the root span, that doesn't have a parent
-            Span rootSpan = trace.getSpans().stream().filter(span -> span.getParentId() == null).findFirst().orElse(null);
+            //Find the root span, that doesn't have a parent and is not an error
+            Span rootSpan = trace.getSpans().stream().filter(span -> span.getParentId() == null && span.getTags().getError() == null).findFirst().orElse(null);
             if (rootSpan == null) return;
 
             nodeTree.setRootNode(NodeConverter.convertServerSpanToNode(rootSpan));
-            //Fill the tree
+            //Fill the tree recursively
             fillChildren(nodeTree.getRootNode(), trace);
             nodeTrees.add(nodeTree);
         });
@@ -28,7 +28,11 @@ public class NodeTreeConverter {
 
     public static void fillChildren(Node node, Trace trace) {
         //Since we can derive everything from the SERVER spans, and we have access to ID's we only need these to fill the tree
-        trace.getSpans().stream().filter(span -> (span.getParentId() != null && span.getParentId().equals(node.getId())) && (span.getKind() != null && span.getKind().equals("SERVER"))).forEach(span -> {
+        trace.getSpans().stream().filter(span -> (span.getParentId() != null
+                && span.getParentId().equals(node.getId()))
+                && (span.getKind() != null
+                && span.getKind().equals("SERVER")))
+                .forEach(span -> {
                     node.getChildren().add(NodeConverter.convertServerSpanToNode(span));
                 }
         );
